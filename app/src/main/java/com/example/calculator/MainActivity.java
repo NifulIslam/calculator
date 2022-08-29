@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -44,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
         bMinus=findViewById(R.id.BtnMinus);
         bMultiply=findViewById(R.id.BtnMultiply);
         bDevide=findViewById(R.id.BtnDevide);
-        modeSwitch=findViewById(R.id.switch_toggle);
 
     }
 
@@ -123,14 +124,14 @@ public class MainActivity extends AppCompatActivity {
         }
         secondExp+=c;
     }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.action_menu, menu);
+        MenuItem itemswitch = menu.findItem(R.id.switch_action_bar);
+        itemswitch.setActionView(R.layout.use_switch);
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        initializeAll();
+        final Switch sw = (Switch) menu.findItem(R.id.switch_action_bar).getActionView().findViewById(R.id.switch2);
 
-        modeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked)
@@ -143,6 +144,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        return true;
+    }
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        initializeAll();
+
+
 
         b0.setOnClickListener(new View.OnClickListener() {
             @Override
