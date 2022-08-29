@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="btnStyle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">10sp</item>
+        <item name="cornerRadius">25sp</item>
+        <item name="backgroundTint">@color/grey</item>
+    </style>
+    <style name="topBtnStyle">
+        <item name="android:layout_marginTop">70dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">10sp</item>
+        <item name="cornerRadius">25sp</item>
+        <item name="backgroundTint">@color/grey</item>
+    </style>
+</resources>
