@@ -13,19 +13,22 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.EmptyStackException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
+
 public class MainActivity extends AppCompatActivity {
 
     TextView output;
-    Button b1,b2,b3,b4,b5,b6,b7,b8,b9,b0,bExp,bEqual,bAdd,bMinus,bMultiply,bDevide,bAc,bMod,bPoint,bToggleMode;
+    Button b1,b2,b3,b4,b5,b6,b7,b8,b9,b0,bExp,bEqual,bAdd,bMinus,bMultiply,bDevide,bAc,bMod,bPoint,bP1,bP2,bBack;
     Switch modeSwitch;
-    boolean hasFirstExp=false;
-    String firstExp="";
-    String secondExp="";
-    char operation='e';
     boolean isDay=false;
-    int toggleClick=0;
+    Set<Character> operators = new HashSet<Character>();
+    String inorderExression="";
 
     private void initializeAll(){
+        operators.add('+');operators.add('-');operators.add('*');operators.add('/');operators.add('^');operators.add('%');
         output=findViewById(R.id.output);
         b0=findViewById(R.id.Btn0);
         b1=findViewById(R.id.Btn1);
@@ -46,9 +49,11 @@ public class MainActivity extends AppCompatActivity {
         bMinus=findViewById(R.id.BtnMinus);
         bMultiply=findViewById(R.id.BtnMultiply);
         bDevide=findViewById(R.id.BtnDevide);
+        bP1=findViewById(R.id.BtnP1);
+        bP2=findViewById(R.id.BtnP2);
+        bBack=findViewById(R.id.BtnBack);
 
     }
-
     private double binaryExp(double base, int power){
         if(power==0)return 1;
         if((power & 1)==1){
@@ -59,71 +64,127 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    public double evaluate(double num1, double num2, char operation){
-        if(operation=='+'){
-            return num1+num2;
-        }
-        if(operation=='-'){
-            return num1-num2;
+    static int precedence(char c)
+    {
+        switch (c)
+        {
+            case '+':
+            case '-':
+            case '%':
+                return 1;
+            case '*':
+            case '/':
+                return 2;
+            case '^':
+                return 3;
+
         }
 
-        if(operation=='*'){
-            return num1*num2;
+        return -1;
+    }
+    public double evaluate(String exp) throws Exception
+    {
+        //operators.add('+');operators.add('-');operators.add('*');operators.add('/');operators.add('^');operators.add('%');
+        Stack<Double> operands = new Stack<Double>();
+        Stack<Character> operations = new Stack<Character>();
+        int i=0;
+        while(i<exp.length()){
+            char c = exp.charAt(i);
+            int start=i;
+            if(! operators.contains(c) && c!='(' && c!=')')
+            {
+
+                while (! operators.contains(c) && c!='(' && c!=')' ) {
+
+                    i++;
+                    if(( i== exp.length())) {break;}
+                    c = exp.charAt(i);
+                }
+
+                double num= Double.parseDouble(exp.substring(start,i));
+                operands.push(num);
+                if(i==exp.length()){break;}
+
+
+            }
+
+            if(c=='(')
+            {
+                operations.push(c);
+            }
+            if(c==')')
+            {
+                while(operations.peek()!='(')
+                {
+                    double outputNum = performOperation(operands, operations);
+                    operands.push(outputNum);
+                }
+                operations.pop();
+            }
+
+
+            if(operators.contains(c))
+            {
+                if(operations.size()<1){
+                    operations.push(c);
+
+                }
+                else{
+                    while( precedence(c)<=precedence(operations.peek()))
+                    {
+                        double outputNum = performOperation(operands, operations);
+                        operands.push(outputNum);
+                        if(operations.size()<1){
+                            break;
+
+                        }
+                    }
+                    operations.push(c);
+                }
+            }
+            i++;
         }
-        if(operation=='/'){
-            if(num2==0)
-                return  0;
-            return num1/num2;
+
+        while(!operations.isEmpty())
+        {
+            double outputNum = performOperation(operands, operations);
+            operands.push(outputNum);
         }
-        if(operation=='%'){
-            return num1%num2;
+        return operands.pop();
+    }
+
+    public double performOperation(Stack<Double> operands, Stack<Character> operations) throws Exception
+    {
+        double a = operands.pop();
+        double b = operands.pop();
+        char operation = operations.pop();
+        switch (operation)
+        {
+            case '+':
+                return a + b;
+            case '-':
+                return b - a;
+            case '*':
+                return a * b;
+            case '%':
+                return a % b;
+            case '/':
+                if (a == 0)
+                {
+
+                    return 0;
+                }
+                return b / a;
+
         }
-        // else to the power
-        return binaryExp(num1,(int)num2);
+        return binaryExp(a,(int)b);
+    }
+    void showInorder(String s){
+        inorderExression+=s;
+        output.setText(inorderExression);
 
     }
 
-    void evaluateExpression(){
-        // user pressed equal button without any operator or second expression
-        if(operation=='e' || secondExp==""){
-            hasFirstExp=firstExp!="";
-            return;
-        }
-
-        if(hasFirstExp){
-            double firstExpFloat=Double.parseDouble(firstExp);
-            double secondExpFloat=Double.parseDouble(secondExp);
-            double ans= evaluate(firstExpFloat,secondExpFloat,this.operation);
-            firstExp=""+ans;
-            secondExp="";
-
-            hasFirstExp=false;
-            operation='e';
-            return;
-        }
-
-
-
-    }
-    void showOperator(){
-        hasFirstExp=true;
-        output.setText(""+this.operation);
-    }
-    void show(){
-        if(!hasFirstExp ){
-            output.setText(""+firstExp);
-            return;
-        }
-        output.setText(""+secondExp);
-
-    }
-    void addToExp(char c){
-        if(!hasFirstExp){
-            firstExp+=c;
-            return;
-        }
-        secondExp+=c;
-    }
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.action_menu, menu);
         MenuItem itemswitch = menu.findItem(R.id.switch_action_bar);
@@ -153,121 +214,113 @@ public class MainActivity extends AppCompatActivity {
         initializeAll();
 
 
-
+        output.setText("");
+        bBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(inorderExression.length()==0) return;
+                inorderExression=inorderExression.substring(0,inorderExression.length()-1);
+                showInorder("");
+            }
+        });
         b0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('0');
-                show();
+                showInorder(b0.getText().toString());
             }
         });
 
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('1');
-                show();
+                showInorder(b1.getText().toString());
 
             }
         });
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('2');
-                show();
+                showInorder(b2.getText().toString());
 
             }
         });
         b3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('3');
-                show();
+                showInorder(b3.getText().toString());
 
             }
         });
         b4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('4');
-                show();
+                showInorder(b4.getText().toString());
 
             }
         });
         b5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('5');
-                show();
+                showInorder(b5.getText().toString());
 
             }
         });
         b6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('6');
-                show();
+                showInorder(b6.getText().toString());
 
             }
         });
         b7.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('7');
-                show();
-
+                showInorder(b7.getText().toString());
             }
         });
         b8.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('8');
-                show();
+                showInorder(b8.getText().toString());
 
             }
         });
         b9.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('9');
-                show();
-
+                showInorder(b9.getText().toString());
             }
         });
         bPoint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addToExp('.');
-                show();
+                showInorder(bPoint.getText().toString());
 
             }
         });
         bExp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                operation='^';
-                showOperator();
-
-                    evaluateExpression();
+                showInorder(bExp.getText().toString());
 
             }
         });
         bEqual.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                evaluateExpression();
-                show();
+                try{
+                    double ans= evaluate(inorderExression);
+                    inorderExression="";
+                    showInorder(""+ans);
+                }
+                catch (Exception e){
+                    inorderExression="";
+                    showInorder("invalid expression");
+                }
+                finally {
+                    inorderExression="";
+                }
 
-                // will start from first again if this code is executed
-                // else saves the output as first expression
-
-                /*
-
-                firstExp="";
-                secondExp="";
-                hasFirstExp=false;
-
-                 */
 
 
             }
@@ -275,9 +328,7 @@ public class MainActivity extends AppCompatActivity {
         bAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                operation='+';
-                showOperator();
-                evaluateExpression();
+                showInorder(bAdd.getText().toString());
 
 
             }
@@ -285,52 +336,57 @@ public class MainActivity extends AppCompatActivity {
         bMinus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                operation='-';
-                showOperator();
-                evaluateExpression();
-
-
+                showInorder(bMinus.getText().toString());
             }
         });
         bMultiply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                operation='*';
-                showOperator();
-                evaluateExpression();
+                showInorder(bMultiply.getText().toString());
 
             }
         });
         bDevide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                operation='/';
-                showOperator();
-                evaluateExpression();
+                showInorder(bDevide.getText().toString());
             }
         });
         bMod.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                operation='%';
-                showOperator();
-                evaluateExpression();
+                showInorder(bMod.getText().toString());
 
             }
         });
         bAc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                firstExp="";
-                secondExp="";
-                hasFirstExp=false;
-                operation='e';
-                show();
+                inorderExression="";
+                showInorder("");
 
             }
         });
 
+        bP1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(inorderExression.length()==0 || operators.contains(inorderExression.charAt(inorderExression.length()-1))) {
+                    showInorder(bP1.getText().toString());
+                    return;
+                }
+                showInorder("*(");
 
+            }
+        });
+
+        bP2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInorder(bP2.getText().toString());
+
+            }
+        });
     }
 
 }
