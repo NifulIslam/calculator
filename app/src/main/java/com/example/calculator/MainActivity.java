@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
         bP1=findViewById(R.id.BtnP1);
         bP2=findViewById(R.id.BtnP2);
         bBack=findViewById(R.id.BtnBack);
-
     }
     private double binaryExp(double base, int power){
         if(power==0)return 1;
@@ -167,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
             case '*':
                 return a * b;
             case '%':
-                return a % b;
+                return b%a;
             case '/':
                 if (a == 0)
                 {
@@ -177,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 return b / a;
 
         }
-        return binaryExp(a,(int)b);
+        return binaryExp(b,(int)a);
     }
     void showInorder(String s){
         inorderExression+=s;
@@ -215,11 +214,12 @@ public class MainActivity extends AppCompatActivity {
 
 
         output.setText("");
+
         bBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(inorderExression.length()==0) return;
-                inorderExression=inorderExression.substring(0,inorderExression.length()-1);
+                inorderExression= inorderExression.substring(0, inorderExression.length()-1);
                 showInorder("");
             }
         });
